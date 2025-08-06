@@ -1,15 +1,14 @@
+<!-- Container -->
 <div>Teachable Machine Image Model</div>
 <button id="start-btn" type="button" onclick="init()">Start</button>
 <div id="webcam-container"></div>
 <div id="label-container"></div>
 
-<!-- Scripts do TensorFlow e Teachable Machine -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+<!-- Scripts -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
 
-<!-- Seu Script -->
 <script type="text/javascript">
-    // URL do seu modelo hospedado via GitHub Pages
     const URL = "https://mellz980.github.io/reconhecimento-fecap/";
 
     let model, webcam, labelContainer, maxPredictions;
@@ -19,36 +18,33 @@
         startBtn.disabled = true;
         startBtn.innerText = 'Carregando...';
 
-        const modelURL = URL + "model.json";
-        const metadataURL = URL + "metadata.json";
-
         try {
-            // Carrega modelo e metadados
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
             model = await tmImage.load(modelURL, metadataURL);
             maxPredictions = model.getTotalClasses();
 
-            // Inicializa webcam
             const flip = true;
             webcam = new tmImage.Webcam(200, 200, flip);
-            await webcam.setup();
+            await webcam.setup(); // pode falhar sem permissão!
             await webcam.play();
 
             document.getElementById("webcam-container").appendChild(webcam.canvas);
 
-            // Cria elementos para exibir as previsões
             labelContainer = document.getElementById("label-container");
             labelContainer.innerHTML = "";
             for (let i = 0; i < maxPredictions; i++) {
-                const div = document.createElement("div");
-                labelContainer.appendChild(div);
+                labelContainer.appendChild(document.createElement("div"));
             }
 
-            // Inicia loop de predição
             window.requestAnimationFrame(loop);
-
+            startBtn.innerText = 'Rodando';
         } catch (err) {
-            console.error("Erro ao carregar modelo ou webcam:", err);
-            alert("Erro ao carregar o modelo. Verifique a URL e se a webcam está liberada.");
+            console.error("Erro ao carregar:", err);
+            alert("Verifique a permissão da webcam ou a URL do modelo.");
+            startBtn.disabled = false;
+            startBtn.innerText = 'Start';
         }
     }
 
@@ -67,3 +63,4 @@
         }
     }
 </script>
+
