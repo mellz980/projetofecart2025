@@ -1,66 +1,85 @@
-<!-- Container -->
-<div>Teachable Machine Image Model</div>
-<button id="start-btn" type="button" onclick="init()">Start</button>
-<div id="webcam-container"></div>
-<div id="label-container"></div>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Teachable Machine - Reconhecimento</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 40px;
+        }
+        #webcam-container {
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teachable Machine Image Model</h1>
+    <button id="start-btn" type="button" onclick="init()">Start</button>
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
 
-<!-- Scripts -->
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
-<script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
+    <!-- Scripts do TensorFlow e Teachable Machine -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest"></script>
 
-<script type="text/javascript">
-    const URL = "https://mellz980.github.io/projetofecart2025/";
+    <script type="text/javascript">
+        const URL = "https://mellz980.github.io/reconhecimento-fecap/";
 
-    let model, webcam, labelContainer, maxPredictions;
+        let model, webcam, labelContainer, maxPredictions;
 
-    async function init() {
-        const startBtn = document.getElementById('start-btn');
-        startBtn.disabled = true;
-        startBtn.innerText = 'Carregando...';
+        async function init() {
+            const startBtn = document.getElementById('start-btn');
+            startBtn.disabled = true;
+            startBtn.innerText = 'Carregando...';
 
-        try {
-            const modelURL = URL + "model.json";
-            const metadataURL = URL + "metadata.json";
+            try {
+                const modelURL = URL + "model.json";
+                const metadataURL = URL + "metadata.json";
 
-            model = await tmImage.load(modelURL, metadataURL);
-            maxPredictions = model.getTotalClasses();
+                model = await tmImage.load(modelURL, metadataURL);
+                maxPredictions = model.getTotalClasses();
 
-            const flip = true;
-            webcam = new tmImage.Webcam(200, 200, flip);
-            await webcam.setup(); // pode falhar sem permissão!
-            await webcam.play();
+                const flip = true;
+                webcam = new tmImage.Webcam(200, 200, flip);
+                await webcam.setup();
+                await webcam.play();
 
-            document.getElementById("webcam-container").appendChild(webcam.canvas);
+                document.getElementById("webcam-container").appendChild(webcam.canvas);
 
-            labelContainer = document.getElementById("label-container");
-            labelContainer.innerHTML = "";
-            for (let i = 0; i < maxPredictions; i++) {
-                labelContainer.appendChild(document.createElement("div"));
+                labelContainer = document.getElementById("label-container");
+                labelContainer.innerHTML = "";
+                for (let i = 0; i < maxPredictions; i++) {
+                    labelContainer.appendChild(document.createElement("div"));
+                }
+
+                window.requestAnimationFrame(loop);
+                startBtn.innerText = 'Rodando';
+            } catch (err) {
+                console.error("Erro ao carregar:", err);
+                alert("Erro ao carregar modelo: " + err.message);
+                startBtn.disabled = false;
+                startBtn.innerText = 'Start';
             }
+        }
 
+        async function loop() {
+            webcam.update();
+            await predict();
             window.requestAnimationFrame(loop);
-            startBtn.innerText = 'Rodando';
-        } catch (err) {
-            console.error("Erro ao carregar:", err);
-            alert("Verifique a permissão da webcam ou a URL do modelo.");
-            startBtn.disabled = false;
-            startBtn.innerText = 'Start';
         }
-    }
 
-    async function loop() {
-        webcam.update();
-        await predict();
-        window.requestAnimationFrame(loop);
-    }
-
-    async function predict() {
-        const prediction = await model.predict(webcam.canvas);
-        for (let i = 0; i < maxPredictions; i++) {
-            const classPrediction =
-                prediction[i].className + ": " + (prediction[i].probability * 100).toFixed(2) + "%";
-            labelContainer.childNodes[i].innerText = classPrediction;
+        async function predict() {
+            const prediction = await model.predict(webcam.canvas);
+            for (let i = 0; i < maxPredictions; i++) {
+                const classPrediction =
+                    prediction[i].className + ": " + (prediction[i].probability * 100).toFixed(2) + "%";
+                labelContainer.childNodes[i].innerText = classPrediction;
+            }
         }
-    }
-</script>
+    </script>
+</body>
+</html>
+
 
